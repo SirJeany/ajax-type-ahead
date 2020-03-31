@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <title>AjaX Type ahead</title>
+
+    <style>
+        .hl {
+            background-color: #ffc600;
+        }
+        li {
+            padding: .4rem;
+        }
+    </style>
+  </head>
+  
+  <body class="vh-100" style="margin: 0; padding: 0; background-color: #ffc600;">
+    <main class="container-fluid">
+        <section class="container d-flex justify-content-center mt-5">
+            <form>
+                <div class="form-group">
+                  <input type="email" class="form-control" id="cityInput" aria-describedby="emailHelp" placeholder="Enter city">
+                </div>
+                <div class="form-group">
+                    <ul class="suggestions list-group">
+                        <!-- <li>Filter for a city</li>
+                        <li>Or a state</li> -->
+                    </ul>
+                </div>
+              </form>
+        </section>
+    </main>
+
+
+
+    <script>
+        const endpoint = 'https://gist.githubusercontent.com/Miserlou/c5cd8364bf9b2420bb29/raw/2bf258763cdddd704f8ffd3ea9a3e81d25e2c6f6/cities.json';
+
+        const cities = [];
+
+        fetch(endpoint)
+        .then(blob => blob.json()
+        .then(data => cities.push(...data)) 
+        ); // ... -> using spread to get each element of the array of data (cities are being returned in groups by the blob) into our cities array - avoid the array of arrays.
+
+        const cityInput = document.getElementById('cityInput');
+        const suggestions = document.querySelector('.suggestions');
+        console.log(suggestions);
+        suggestions.innerHTML = `<li class="list-group-item border rounded bg-light">Waiting for input</li>`;
+
+        function findMatches(word, cities) {            
+            return cities.filter(city => {
+                const regex = new RegExp(word, 'gi'); // Global, Insensitive
+                return city.city.match(regex)  || city.state.match(regex); 
+            });
+        }
+
+        function numberWithCommas(x) {
+            return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+
+        function displayMatches() {
+            const matchArray = findMatches(this.value, cities);
+            const html = matchArray.map(place => {
+                const regex = new RegExp(this.value, 'gi');
+                const cityName = place.city.replace(regex, `<span class="hl">${this.value[0].toUpperCase() + this.value.slice(1)}</span>`);
+                const stateName = place.state.replace(regex, `<span class="hl">${this.value.replace(/^./, this.value[0].toUpperCase())}</span>`);
+                return `
+                    <li class="list-group-item border rounded bg-light mb-1 d-flex justify-content-between">
+                        <span class="name">${cityName}, ${stateName}</span>
+                        <span class="population ml-3"><small>${numberWithCommas(place.population)}</small></span>
+                    </li>
+                `;
+            });
+            suggestions.innerHTML = html.join('');
+        }
+        
+
+        let input = '';
+        cityInput.addEventListener('keyup', displayMatches);
+    </script>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+  </body>
+</html>
